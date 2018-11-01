@@ -1,11 +1,12 @@
 ## XBanner
 
 [![latestVersion](https://api.bintray.com/packages/jxnk25/maven/XBanner/images/download.svg) ](https://bintray.com/jxnk25/maven/XBanner/_latestVersion)
- [![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)]()
+ [![License](https://img.shields.io/badge/License-Apache--2.0-green.svg)](https://github.com/xiaohaibin/XBanner/blob/master/LICENSE)
  
 ![1](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/xbanner.png)
 
 ## 主要功能：
+- 支持一屏显示多个
 - 支持根据服务端返回的数据动态设置广告条的总页数
 - 支持大于等于1页时的无限循环自动轮播、手指按下暂停轮播、抬起手指开始轮播
 - 支持自定义状态指示点位置  左 、中 、右
@@ -19,10 +20,18 @@
 - 支持设置数字指示器
 - 支持设置图片框架整体占位图
 - 支持Glide/Fresco等主流图片加载框架加载图片
+- 支持自定义布局
 
 ## 效果图
 
-![1](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/xbanner.gif)
+|模式|效果图
+| :-: | :-: |
+|指示器模式|![效果示例](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/screenshot3.png)|
+|数字模式|![效果示例](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/screenshot6.png)|
+|数字加标题模式|![效果示例](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/screenshot5.png)|
+|指示器加标题模式|![效果示例](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/screenshot1.png)|
+|标题模式|![效果示例](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/screenshot2.png)|
+|一屏多个模式|![效果示例](https://github.com/xiaohaibin/XBanner/blob/master/sceenshots/screenshot4.png)|
 
 ## 基本使用
 
@@ -39,7 +48,7 @@ dependencies {
 <uses-permission android:name="android.permission.INTERNET" />
 ```
 
-#### 3.在布局文件中添加XBanner
+#### 3.在布局文件中添加 XBanner
 ```
     <com.stx.xhb.xbanner.XBanner
         xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -58,7 +67,7 @@ dependencies {
 ```
 
 
-#### 4.在Activity或者Fragment中配置
+#### 4.在 Activity 或者 Fragment 中配置
 
 > 初始化:直接传入视图集合进行初始化
 
@@ -128,7 +137,8 @@ dependencies {
 ```
 
 #### 8.使用 Fresco 加载图片时，需要自定义布局文件
-1.自定义xml布局文件 image_fresco.layout
+
+1.自定义布局文件 R.layout.image_fresco
 ```
  <?xml version="1.0" encoding="utf-8"?>
  <com.facebook.drawee.view.SimpleDraweeView
@@ -142,6 +152,40 @@ dependencies {
    mXBanner.setData(R.layout.image_fresco,“图片资源集合”,"提示文字集合，没有传null");
    
 ```
+#### 9.自定义布局
+
+1.自定义自己需要展示的Banner显示布局，如：R.layout.customelayout
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/tv"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:text="1"
+    android:textSize="40dp"
+    android:gravity="center"
+    android:textColor="@android:color/white"
+    android:background="@color/colorYellow"/>
+```
+
+2.使用 setData() 方法进行设置
+```
+   mXBanner.setData(R.layout.customelayout,“图片资源集合”,"提示文字集合，没有传null");
+```
+
+3.设置数据，通过 loadImage() 方法回传的 View 根据自定义布局设置的Id找到相应的控件进行数据设置，具体请看 [CustomViewsActivity](https://github.com/xiaohaibin/XBanner/blob/master/sample/src/main/java/com/stx/xhb/demo/CustomViewsActivity.java)
+```
+mBanner.loadImage(new XBanner.XBannerAdapter() {
+               @Override
+               public void loadBanner(XBanner banner, Object model, View view, int position) {
+                   TextView tvContent = (TextView) view.findViewById(R.id.tv);
+                   tvContent.setText(String.valueOf(position + 1));
+                   view.setBackgroundColor(Color.parseColor((String) model));
+               }
+           });
+```
+
 
 ## 自定义属性说明
 
@@ -167,6 +211,10 @@ dependencies {
 | pageChangeDuration|图片切换速度| int值，默认为1000ms |
 | isHandLoop|是否支持手动无限循环切换图片| boolean类型，默认为false |
 | placeholderDrawable|设置整体轮播框架占位图| reference |
+| isClipChildrenMode|是否开启一屏显示多个模式|  boolean类型，默认为false 默认不开启 |
+| clipChildrenLeftRightMargin|一屏显示多个左右间距| dimension ，默认为30dp|
+| clipChildrenTopBottomMargin|一屏显示多个上下间距| dimension ，默认为30dp|
+| viewpagerMargin|viewpager页面间距| dimension ，默认为10dp|
 
 ## 混淆配置
 
@@ -175,8 +223,34 @@ dependencies {
 -keep class com.stx.xhb.xbanner.**{*;}
 ```
 
+## 注意事项
+
+- 1.一屏显示多个模式默认使用ScalePageTransformer切换动画，也可以自定义；
+
+- 2.一屏显示多个模式默认是会缩放左右两个页面，若想左右页面与中间页面保持一致，把切换动画设置成自己自定义的就可以；
+
 >## 更新说明
 
+
+>v1.4.8
+
+- 修复一屏多显模式加载4张网络图片右边显示空白bug
+
+>v1.4.7
+
+- 修复一屏多显模式加载3张网络图片中间显示空白bug
+ 
+>v1.4.5
+
+- 修复一屏显示多个模式在手动轮播下，左右滑动高度不一致bug<br />
+
+>v1.4.4
+
+- 修复一屏显示多个模式在setOffscreenPageLimit(3)导致中间banner不显示bug<br />
+
+>v1.4.2
+
+- 新增支持一屏显示多个模式<br />
 
 >v1.4.1
 
@@ -259,7 +333,7 @@ dependencies {
 
 ![欢迎加入“大话安卓”技术交流群，互相学习提升](http://upload-images.jianshu.io/upload_images/1956769-326c166b86ed8e94.JPG?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)
 
-### 如果喜欢，还请statr&Fork&follow进行支持，谢谢O(∩_∩)O~。
+### 如果喜欢，还请statr&&follow支持一下，谢谢O(∩_∩)O~。
 
 License
 --

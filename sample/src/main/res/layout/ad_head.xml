@@ -15,8 +15,8 @@
         app:pointsPosition="RIGHT"
         app:tipTextSize="12sp"
         app:isAutoPlay="true"
-        app:isShowNumberIndicator="true"
-        app:isShowIndicatorOnlyOne="true"
+        app:isShowNumberIndicator="false"
+        app:isShowIndicatorOnlyOne="false"
         app:pageChangeDuration="800"/>
 
 </LinearLayout>

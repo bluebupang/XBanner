@@ -10,11 +10,11 @@
     <com.stx.xhb.xbanner.XBanner
         android:id="@+id/banner"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
+        android:layout_height="wrap_content"
         app:AutoPlayTime="3000"
         app:isAutoPlay="true"
+        app:pointsVisibility="false"
         app:isShowIndicatorOnlyOne="true"
-        app:isShowNumberIndicator="false"
         app:pageChangeDuration="800"
         app:pointsContainerBackground="#442e2e2e"
         app:pointsPosition="RIGHT"

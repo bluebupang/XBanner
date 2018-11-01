@@ -1,21 +1,23 @@
 package com.stx.xhb.demo;
 
-import android.content.Context;
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
+import com.stx.xhb.demo.entity.TuchongEntity;
 import com.stx.xhb.xbanner.XBanner;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
+import com.zhy.http.okhttp.utils.L;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void initView() {
         mBanner = (XBanner) findViewById(R.id.banner);
+        mBanner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ScreenUtil.getScreenWidth(this) / 2));
         ListView listView = (ListView) findViewById(R.id.lv);
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.pages));
         listView.setAdapter(adapter);
@@ -45,13 +48,16 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
                     case 0:
-                        startActivity(new Intent(MainActivity.this,ListViewActivity.class));
+                        startActivity(new Intent(MainActivity.this, ListViewActivity.class));
                         break;
                     case 1:
-                        startActivity(new Intent(MainActivity.this,GuideActivity.class));
+                        startActivity(new Intent(MainActivity.this, GuideActivity.class));
                         break;
                     case 2:
-                        startActivity(new Intent(MainActivity.this,CustomViewsActivity.class));
+                        startActivity(new Intent(MainActivity.this, CustomViewsActivity.class));
+                        break;
+                    case 3:
+                        startActivity(new Intent(MainActivity.this, ClipChildrenModeActivity.class));
                         break;
                     default:
                         break;
@@ -67,8 +73,8 @@ public class MainActivity extends AppCompatActivity {
         //设置广告图片点击事件
         mBanner.setOnItemClickListener(new XBanner.OnItemClickListener() {
             @Override
-            public void onItemClick(XBanner banner, Object model,View view, int position) {
-                Toast.makeText(MainActivity.this, "点击了第" + (position+1) + "图片", Toast.LENGTH_SHORT).show();
+            public void onItemClick(XBanner banner, Object model, View view, int position) {
+                Toast.makeText(MainActivity.this, "点击了第" + (position + 1) + "图片", Toast.LENGTH_SHORT).show();
             }
         });
         //加载广告图片
@@ -76,7 +82,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void loadBanner(XBanner banner, Object model, View view, int position) {
                 //在此处使用图片加载框架加载图片，demo中使用glide加载，可替换成自己项目中的图片加载框架
-                Glide.with(MainActivity.this).load(((AdvertiseEntity.OthersBean) model).getThumbnail()).placeholder(R.drawable.default_image).error(R.drawable.default_image).into((ImageView) view);
+                TuchongEntity.FeedListBean.EntryBean listBean = ((TuchongEntity.FeedListBean) model).getEntry();
+                String url = "https://photo.tuchong.com/" + listBean.getImages().get(0).getUser_id() + "/f/" + listBean.getImages().get(0).getImg_id() + ".jpg";
+                Glide.with(MainActivity.this).load(url).placeholder(R.drawable.default_image).error(R.drawable.default_image).into((ImageView) view);
             }
         });
     }
@@ -86,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initData() {
         //加载网络图片资源
-        String url = "http://news-at.zhihu.com/api/4/themes";
+        String url = "https://api.tuchong.com/2/wall-paper/app";
         OkHttpUtils
                 .get()
                 .url(url)
@@ -99,15 +107,20 @@ public class MainActivity extends AppCompatActivity {
 
                     @Override
                     public void onResponse(String response, int id) {
-                        AdvertiseEntity advertiseEntity = new Gson().fromJson(response, AdvertiseEntity.class);
-                        List<AdvertiseEntity.OthersBean> others = advertiseEntity.getOthers();
-                        List<String> tips = new ArrayList<>();
+                        TuchongEntity advertiseEntity = new Gson().fromJson(response, TuchongEntity.class);
+                        List<TuchongEntity.FeedListBean> others = advertiseEntity.getFeedList();
+                        List<TuchongEntity.FeedListBean> data=new ArrayList<>();
+                        List<String> tips=new ArrayList<>();
                         for (int i = 0; i < others.size(); i++) {
-                            tips.add(others.get(i).getDescription() + "哈哈哈哈或或或或或或或或或或或或");
+                            TuchongEntity.FeedListBean feedListBean = others.get(i);
+                            if ("post".equals(feedListBean.getType())){
+                                data.add(feedListBean);
+                                tips.add(feedListBean.getEntry().getTitle());
+                            }
                         }
                         //刷新数据之后，需要重新设置是否支持自动轮播
-                        mBanner.setAutoPlayAble(others.size() > 1);
-                        mBanner.setData(others, tips);
+                        mBanner.setAutoPlayAble(data.size() > 1);
+                        mBanner.setData(data, tips);
                     }
                 });
     }
