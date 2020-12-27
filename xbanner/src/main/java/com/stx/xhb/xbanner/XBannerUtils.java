@@ -4,12 +4,17 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.StateListDrawable;
+import android.os.Build;
+import android.support.annotation.DrawableRes;
+import android.support.v4.view.ViewCompat;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
+import android.view.View;
+
+import java.util.List;
 
 /**
- * Created by jxnk25 on 2016/9/13.
- *
+ * <p>
  * link https://xiaohaibin.github.io/
  * email： xhb_199409@163.com
  * github: https://github.com/xiaohaibin
@@ -31,6 +36,14 @@ public class XBannerUtils {
         return stateListDrawable;
     }
 
+    public static Drawable getDrawable(Context context, @DrawableRes int resId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            return context.getDrawable(resId);
+        } else {
+            return context.getResources().getDrawable(resId);
+        }
+    }
+
     public static int dp2px(Context context, float dpValue) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dpValue, context.getResources().getDisplayMetrics());
     }
@@ -39,11 +52,29 @@ public class XBannerUtils {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, spValue, context.getResources().getDisplayMetrics());
     }
 
-    public static int getScreenWidth(Context context){
+    public static int getScreenWidth(Context context) {
         Resources resources = context.getResources();
         DisplayMetrics dm = resources.getDisplayMetrics();
-        int width = dm.widthPixels;
-        return width;
+        return dm.widthPixels;
+    }
+
+    public static void resetPageTransformer(List<? extends View> views) {
+        if (views == null) {
+            return;
+        }
+        for (View view : views) {
+            view.setVisibility(View.VISIBLE);
+            ViewCompat.setAlpha(view, 1);
+            ViewCompat.setPivotX(view, view.getMeasuredWidth() * 0.5f);
+            ViewCompat.setPivotY(view, view.getMeasuredHeight() * 0.5f);
+            ViewCompat.setTranslationX(view, 0);
+            ViewCompat.setTranslationY(view, 0);
+            ViewCompat.setScaleX(view, 1);
+            ViewCompat.setScaleY(view, 1);
+            ViewCompat.setRotationX(view, 0);
+            ViewCompat.setRotationY(view, 0);
+            ViewCompat.setRotation(view, 0);
+        }
     }
 
 

@@ -1,6 +1,7 @@
 package com.stx.xhb.demo;
 
 import android.os.Bundle;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -13,7 +14,6 @@ import com.bumptech.glide.Glide;
 import com.google.gson.Gson;
 import com.stx.xhb.demo.entity.TuchongEntity;
 import com.stx.xhb.xbanner.XBanner;
-import com.stx.xhb.xbanner.transformers.ScalePageTransformer;
 import com.stx.xhb.xbanner.transformers.Transformer;
 import com.zhy.http.okhttp.OkHttpUtils;
 import com.zhy.http.okhttp.callback.StringCallback;
@@ -30,12 +30,13 @@ public class ListViewActivity extends AppCompatActivity {
 
     private XBanner mXBanner;
     private android.widget.ListView mLv;
+    private SwipeRefreshLayout mRefreshLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_listview);
-        initData();
+        requsetData(false);
         initView();
         setAdapter();
         setListener();
@@ -52,7 +53,8 @@ public class ListViewActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch (position) {
-                    case 0://默认切换动画
+                    //默认切换动画
+                    case 0:
                         mXBanner.setPageTransformer(Transformer.Default);
                         break;
                     case 1:
@@ -97,9 +99,9 @@ public class ListViewActivity extends AppCompatActivity {
     }
 
     /**
-     * 初始化数据
+     * 加载网络数据
      */
-    private void initData() {
+    private void requsetData(final boolean refresh) {
         //加载网络图片资源
         String url = "https://api.tuchong.com/2/wall-paper/app";
         OkHttpUtils
@@ -116,20 +118,17 @@ public class ListViewActivity extends AppCompatActivity {
                     public void onResponse(String response, int id) {
                         TuchongEntity advertiseEntity = new Gson().fromJson(response, TuchongEntity.class);
                         List<TuchongEntity.FeedListBean> others = advertiseEntity.getFeedList();
-                        List<TuchongEntity.FeedListBean> data=new ArrayList<>();
-                        List<String> tips=new ArrayList<>();
-                        for (int i = 0; i < others.size(); i++) {
+                        List<TuchongEntity.FeedListBean.EntryBean> data = new ArrayList<>();
+//                        int size = refresh ? 4 : others;
+                        for (int i = 0; i <others.size(); i++) {
                             TuchongEntity.FeedListBean feedListBean = others.get(i);
-                            if ("post".equals(feedListBean.getType())){
-                                data.add(feedListBean);
-                                tips.add(feedListBean.getEntry().getTitle());
+                            if ("post".equals(feedListBean.getType())) {
+                                data.add(feedListBean.getEntry());
                             }
                         }
                         //刷新数据之后，需要重新设置是否支持自动轮播
                         mXBanner.setAutoPlayAble(data.size() > 1);
-                        mXBanner.setData(data, tips);
-                        //从指定位置开始轮播
-                        mXBanner.getViewPager().setCurrentItem(2);
+                        mXBanner.setBannerData(data);
                     }
                 });
     }
@@ -138,12 +137,22 @@ public class ListViewActivity extends AppCompatActivity {
      * 初始化View
      */
     private void initView() {
-        mLv = (android.widget.ListView) findViewById(R.id.lv);
+        mLv = findViewById(R.id.lv);
+        mRefreshLayout = findViewById(R.id.refresh_layout);
+
         // 初始化HeaderView
         View headerView = View.inflate(this, R.layout.ad_head, null);
-        mXBanner = (XBanner) headerView.findViewById(R.id.banner);
+        mXBanner = headerView.findViewById(R.id.banner);
         mXBanner.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ScreenUtil.getScreenWidth(this) / 2));
         mLv.addHeaderView(headerView);
+
+        mRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requsetData(true);
+                mRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     /**
@@ -153,7 +162,7 @@ public class ListViewActivity extends AppCompatActivity {
         //设置广告图片点击事件
         mXBanner.setOnItemClickListener(new XBanner.OnItemClickListener() {
             @Override
-            public void onItemClick(XBanner banner, Object model,View view, int position) {
+            public void onItemClick(XBanner banner, Object model, View view, int position) {
                 Toast.makeText(ListViewActivity.this, "点击了第" + (position + 1) + "图片", Toast.LENGTH_SHORT).show();
             }
         });
@@ -162,7 +171,7 @@ public class ListViewActivity extends AppCompatActivity {
             @Override
             public void loadBanner(XBanner banner, Object model, View view, int position) {
                 //在此处使用图片加载框架加载图片，demo中使用glide加载，可替换成自己项目中的图片加载框架
-                TuchongEntity.FeedListBean.EntryBean listBean = ((TuchongEntity.FeedListBean) model).getEntry();
+                TuchongEntity.FeedListBean.EntryBean listBean = ((TuchongEntity.FeedListBean.EntryBean) model);
                 String url = "https://photo.tuchong.com/" + listBean.getImages().get(0).getUser_id() + "/f/" + listBean.getImages().get(0).getImg_id() + ".jpg";
                 Glide.with(ListViewActivity.this).load(url).placeholder(R.drawable.default_image).error(R.drawable.default_image).into((ImageView) view);
             }
